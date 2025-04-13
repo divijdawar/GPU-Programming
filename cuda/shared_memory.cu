@@ -88,7 +88,7 @@ int main() {
     double flops = 2.0 * width * width * width; // 2 * N^3
     double gflops = flops / (milliseconds / 1000.0) / 1e9;
  
-    printf("Execution time: %.3f ms\n", milliseconds); // achieving 9.38 gflops
+    printf("Execution time: %.3f ms\n", milliseconds); // achieving 9.38 gflops on a rtx 1070
     printf("GFLOPS: %.2f\n", gflops);
  
     free(h_A);
