@@ -2,7 +2,6 @@
 // All the kernels are designed to run on an RTX 4090 GPU
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
-#include <torch/extension.h>
 
 __global__ void embedding_kernel(
     const int __restrict__ *token_ids, // [B, T]
@@ -13,20 +12,31 @@ __global__ void embedding_kernel(
     const int D, // embedding dimension 
     const int V // vocabulary size
 ) {
-    int a = blockIdx.x; // batch index
-    int b = blockIdx.y; // sequence index
-    int x = threadIdx.x; 
+    // Use dynamic shared memory instead of static allocation
+    extern __shared__ int shared_token_ids[];
+    
+    int batch_idx = blockIdx.x; // batch index
+    int seq_idx = blockIdx.y;   // sequence index
+    int thread_idx = threadIdx.x; 
+    
+    // Bounds checking
+    if (batch_idx >= B || seq_idx >= T) return;
 
-    __shared__ int shared_token_ids[T];
-
-    // Load token IDs to shared memory
-    if (x < T) {
-        shared_token_ids[x] = token_ids[a * T + x];
+    // Cooperatively load token IDs to shared memory
+    // Each thread loads one token ID
+    if (thread_idx < T) {
+        shared_token_ids[thread_idx] = token_ids[batch_idx * T + thread_idx];
     }
     __syncthreads();
     
-    for(int i = x; i < D; i += blockDim.x) { 
-        half val = lookup_table[shared_token_ids[b] * D + i];
-        output[a * T * D + b * D + i] = val;
+    // Each thread processes multiple embedding dimensions
+    int token_id = shared_token_ids[seq_idx];
+    
+    // Bounds check for token_id
+    if (token_id >= V || token_id < 0) return;
+    
+    for(int dim_idx = thread_idx; dim_idx < D; dim_idx += blockDim.x) { 
+        half val = lookup_table[token_id * D + dim_idx];
+        output[batch_idx * T * D + seq_idx * D + dim_idx] = val;
     }
 }
