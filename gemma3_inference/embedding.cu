@@ -29,7 +29,6 @@ __global__ void embedding_kernel(
     }
     __syncthreads();
     
-    // Each thread processes multiple embedding dimensions
     int token_id = shared_token_ids[seq_idx];
     
     // Bounds check for token_id
