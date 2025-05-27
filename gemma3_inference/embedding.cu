@@ -12,7 +12,6 @@ __global__ void embedding_kernel(
     const int D, // embedding dimension 
     const int V // vocabulary size
 ) {
-    // Use dynamic shared memory instead of static allocation
     extern __shared__ int shared_token_ids[];
     
     int batch_idx = blockIdx.x; // batch index
