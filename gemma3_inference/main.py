@@ -14,13 +14,12 @@ class Gemma3InferenceEngine:
         
         # Extract and move embedding weights to GPU
         self.embedding_weights = model.embed_tokens.weight.cuda().contiguous()
-        del model  # Free memory immediately
+        del model  
         
-        # Model dimensions
         self.vocab_size = self.embedding_weights.shape[0]
         self.embed_dim = self.embedding_weights.shape[1]
     
-    def tokenize(self, text):
+    def tokenize(self, text) -> torch.Tensor:
         return self.tokenizer.encode(text, return_tensors="pt")
     
     def embedding(self, tokens):
