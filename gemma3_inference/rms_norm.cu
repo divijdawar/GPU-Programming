@@ -4,6 +4,9 @@
 
 #define WARP_SIZE 32
 
+#define MAX_THREADS_PER_BLOCK 1024
+#define MIN_BLOCKS_PER_SM 1
+
 template <typename T>
 __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_SM) rms_norm_kernel(
     const T* __restrict__ input, // [N,D]
@@ -68,6 +71,7 @@ __global__ void __launch_bounds__(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_SM) rms_
     
     float inv_rms = warp_sums[0];
     
+    // apply normalization and scaling
     for (int i = thread_idx; i < D; i += block_dim) {
         int idx = block_idx * D + i;
         float normalized = input[idx] * inv_rms;
