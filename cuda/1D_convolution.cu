@@ -32,5 +32,4 @@ __global__ void convolution1D(
 
         output[t] = accum; 
         __syncthreads(); 
-
     }
